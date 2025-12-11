@@ -1,0 +1,137 @@
+﻿@page "/turma/turmas"
+@rendermode InteractiveServer
+
+@using ACE.Domain.Contracts.Services
+@using ACE.Domain.Models
+@inject ITurmaService TurmaService 
+@inject NavigationManager NavManager
+@inject IJSRuntime JSRuntime 
+
+<h3>Lista de Turmas</h3>
+
+@if (isLoading)
+{
+    <p><em>Carregando turmas...</em></p>
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+    </div>
+}
+else if (turmas == null || !turmas.Any())
+{
+    <p>Nenhuma turma encontrada.</p>
+    <a href="/turmas/adicionar" class="btn btn-success">Adicionar Nova Turma</a>
+}
+else
+{
+    <a href="/turmas/adicionar" class="btn btn-success mb-3">Adicionar Nova Turma</a>
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Nome da Turma</th>
+                <th>ID da Turma (Debug)</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var turma in turmas)
+            {
+                <tr>
+                    <td>@turma.Nome</td>
+                    <td>@turma.Id</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => EditarTurma(turma.Id)">
+                            Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeletarTurma(turma.Id)">
+                            Deletar
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private List<Turma>? turmas;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+ 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTurmas();
+    }
+
+    
+    private async Task LoadTurmas()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+          
+            turmas = await TurmaService.ListarAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao carregar a lista de turmas: {ex.Message}";
+            Console.WriteLine(ex.ToString());
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+   
+    private void EditarTurma(Guid turmaId)
+    {
+       
+        NavManager.NavigateTo($"/turmas/editar/{turmaId}");
+    }
+
+ 
+    private async Task DeletarTurma(Guid turmaId)
+    {
+      
+        var nomeTurma = turmas?.FirstOrDefault(t => t.Id == turmaId)?.Nome ?? "desconhecida";
+
+        var isConfirmed = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            new object[] { $"Tem certeza que deseja deletar a turma '{nomeTurma}'? Se houver alunos matriculados, a operação falhará." }
+        );
+
+        if (isConfirmed)
+        {
+            try
+            {
+               
+                await TurmaService.DeletarAsync(turmaId);
+
+               
+                await LoadTurmas();
+            }
+            catch (InvalidOperationException ex)
+            {
+              
+                errorMessage = ex.Message;
+            }
+            catch (Exception ex)
+            {
+               
+                errorMessage = $"Erro ao deletar a turma: {ex.Message}";
+                Console.WriteLine(ex.ToString());
+            }
+        }
+    }
+}

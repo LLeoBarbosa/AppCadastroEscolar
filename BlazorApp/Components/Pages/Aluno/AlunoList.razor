@@ -1,0 +1,132 @@
+﻿@page "/aluno/alunos"
+@rendermode InteractiveServer
+
+@using ACE.Domain.Contracts.Services
+@using ACE.Domain.Models
+@using System.Threading.Tasks
+@inject IAlunoService AlunoService 
+@inject NavigationManager NavManager
+
+<h3>Lista de Alunos</h3>
+
+@if (isLoading)
+{
+    <p><em>Carregando alunos...</em></p>
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+    </div>
+}
+else if (alunos == null || !alunos.Any())
+{
+    <p>Nenhum aluno encontrado.</p>
+    <a href="/alunos/adicionar" class="btn btn-success">Adicionar Novo Aluno</a>
+}
+else
+{
+    <a href="/alunos/adicionar" class="btn btn-success mb-3">Adicionar Novo Aluno</a>
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Cidade/UF</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var aluno in alunos)
+            {
+                <tr>
+                    <td>@aluno.Nome</td>
+                    <td>@aluno.CPF</td>
+                    <td>@aluno.Cidade/@aluno.UF</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => EditarAluno(aluno.Id)">
+                            Editar
+                        </button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeletarAluno(aluno.CPF)">
+                            Deletar
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">
+        @errorMessage
+    </div>
+}
+
+
+@code {
+
+    private IEnumerable<Aluno>? alunos;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+ 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAlunos();
+    }
+
+    // 2. Método para carregar os dados
+    private async Task LoadAlunos()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+          
+            alunos = await AlunoService.ListarAlunosAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao carregar a lista de alunos: {ex.Message}";
+            Console.WriteLine(ex.ToString());
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    
+    private void EditarAluno(Guid alunoId)
+    {
+      
+        NavManager.NavigateTo($"/alunos/editar/{alunoId}");
+    }
+
+ 
+    private async Task DeletarAluno(string cpf)
+    {
+       
+        if (cpf != null)
+        {
+            try
+            {
+                var aluno = await AlunoService.BuscarAlunoPorIdAsync(cpf);
+                
+                await AlunoService.DeletarAlunoAsync(aluno);
+
+             
+                await LoadAlunos();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Erro ao deletar o aluno: {ex.Message}";
+                Console.WriteLine(ex.ToString());
+            }
+        }
+    }
+
+    
+}
+

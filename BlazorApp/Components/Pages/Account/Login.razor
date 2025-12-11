@@ -1,0 +1,98 @@
+﻿@page "/account/login"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using BlazorApp.Authentication
+
+<h3 class="text-center">Entrar</h3>
+
+<div class="d-flex justify-content-center">
+
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin" FormName="loginForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div>
+                <label for="email">E-mail</label>
+                <InputText id="email" @bind-Value="@loginModel.Email" placeholder="seu.email@exemplo.com" class="form-control" />
+            </div>
+
+            <div>
+                <label for="senha">Senha</label>
+                <InputText id="senha" @bind-Value="@loginModel.Password" type="password" placeholder="Sua senha" class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3" disabled="@isBusy">
+                @if (isBusy)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <p>Aguarde...</p>
+                }
+                else
+                {
+                    <span>Entrar</span>
+                }
+            </button>
+
+        </EditForm>
+
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <p style="color:red; margin-top: 10px;">@error</p>
+}
+
+@inject CustomAuthStateProvider AuthProvider
+@inject NavigationManager NavManager
+@code {
+    private LoginModel loginModel = new();
+    private string error = "";
+    private bool isBusy = false; 
+
+   
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "O e-mail é obrigatório.")]
+        [EmailAddress(ErrorMessage = "Formato de e-mail inválido.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "A senha é obrigatória.")]
+        public string Password { get; set; } = "";
+    }
+
+    private async Task HandleLogin()
+    {
+        error = string.Empty;
+        isBusy = true;
+
+        try
+        {
+         
+            var formResult = await AuthProvider.LoginAsync(loginModel.Email, loginModel.Password);
+
+            if (formResult)
+            {
+               
+                NavManager.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                error = "E-mail ou senha inválidos. Verifique novamente!";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Erro inesperado na conexão: {ex.Message}";
+         
+            Console.WriteLine($"Erro no Login: {ex.ToString()}");
+        }
+        finally
+        {
+            isBusy = false; 
+        }
+    }
+}

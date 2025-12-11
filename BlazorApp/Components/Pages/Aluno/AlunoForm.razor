@@ -1,0 +1,175 @@
+﻿@page "/aluno/adicionar"
+
+@rendermode InteractiveServer
+
+@using ACE.Domain.Contracts.Services
+@using ACE.Domain.Models
+@using System.ComponentModel.DataAnnotations
+
+@inject IAlunoService AlunoService
+@inject NavigationManager NavManager
+
+<h3 class="text-center">Cadastrar Novo Aluno</h3>
+
+
+<div class="d-flex justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+        <EditForm Model="@alunoModel" OnValidSubmit="HandleCadastro">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="card p-4 shadow-sm">
+                <h5 class="card-title">Dados Pessoais</h5>
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="nome">Nome Completo</label>
+                        <InputText id="nome" @bind-Value="alunoModel.Nome" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="cpf">CPF</label>
+                        <InputText id="cpf" @bind-Value="alunoModel.CPF" class="form-control" />
+                     
+                    </div>
+                </div>
+
+                <h5 class="card-title mt-4">Endereço</h5>
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="cep">CEP</label>
+                        <InputText id="cep" @bind-Value="alunoModel.CEP" class="form-control" />
+                      
+                    </div>
+                    
+                    <div class="col-md-8 mb-3">
+                        <label for="logradouro">Logradouro</label>
+                        <InputText id="logradouro" @bind-Value="alunoModel.Logradouro" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label for="numero">Número</label>
+                        <InputNumber id="numero" @bind-Value="alunoModel.Numero" class="form-control" />
+                    </div>
+                    
+                    <div class="col-md-5 mb-3">
+                        <label for="bairro">Bairro</label>
+                        <InputText id="bairro" @bind-Value="alunoModel.Bairro" class="form-control" />
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label for="cidade">Cidade</label>
+                        <InputText id="cidade" @bind-Value="alunoModel.Cidade" class="form-control" />
+                    </div>
+
+                    <div class="col-md-2 mb-3">
+                        <label for="uf">UF</label>
+                        <InputText id="uf" @bind-Value="alunoModel.UF" class="form-control" maxlength="2" />
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="alert alert-danger mt-3">@error</div>
+                }
+                
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success mt-3">@successMessage</div>
+                }
+
+                <div class="mt-4 d-flex justify-content-end">
+
+                    <a type="button" style="margin-right:10px;" class="btn btn-success mr-2" href="#">
+                        Importar CSV
+                    </a>
+
+                    
+                    <button type="submit" class="btn btn-primary" disabled="@isBusy">
+
+                        @if (isBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <p>Salvando...</p>
+                        }
+                        else
+                        {
+                            <span>Salvar Aluno</span>
+                        }
+
+                    </button>
+
+                    <a type="button" class="btn btn-secondary ms-2" href="/aluno/alunos">
+                        Voltar para Lista
+                    </a>
+
+                </div>
+
+            </div>
+
+        </EditForm>
+
+    </div>
+
+</div>
+
+@code {
+    private Aluno alunoModel = new();
+    private string error = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isBusy = false;
+
+  
+    
+    private async Task HandleCadastro()
+    {
+        error = string.Empty;
+        successMessage = string.Empty;
+        isBusy = true;
+
+        try
+        {
+         
+            var novoAluno = new Aluno 
+            {
+                Nome = alunoModel.Nome,
+                CPF = alunoModel.CPF,
+                CEP = alunoModel.CEP,
+                Logradouro = alunoModel.Logradouro,
+                Bairro = alunoModel.Bairro,
+                Cidade = alunoModel.Cidade,
+                UF = alunoModel.UF,
+                Numero = alunoModel.Numero
+            };
+            
+         
+            await AlunoService.AdicionarAlunoAsync(novoAluno);
+
+            successMessage = "Aluno cadastrado com sucesso!";
+          
+            alunoModel = new Aluno();
+        }
+        catch (InvalidOperationException ex)
+        {
+           
+            error = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            error = $"Ocorreu um erro ao salvar: {ex.Message}";
+            Console.WriteLine(ex.ToString());
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+       
+    // private async Task BuscarCep() { ... } 
+}

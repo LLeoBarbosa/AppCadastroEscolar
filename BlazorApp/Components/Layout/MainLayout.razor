@@ -1,0 +1,67 @@
+﻿@using BlazorApp.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+
+@inherits LayoutComponentBase
+
+<div class="page">
+
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+
+        <div class="top-row px-4">
+            @*    <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a> *@
+
+            <AuthorizeView>
+
+                <Authorized>
+
+                    <p class="my-3 me-3">Hello,  @context.User.Identity?.Name!</p>
+                    <button class="btn btn-primary" href="account/logout">Logout</button>
+
+                </Authorized>
+
+                <NotAuthorized>
+
+                    <a class="btn btn-primary" href="/account/login">Login</a>
+                    <a class="btn btn-outline-primary" href="/account/register">Register</a>
+
+                </NotAuthorized>
+
+            </AuthorizeView>
+
+        </div>
+        
+        <article class="content px-4">
+            @Body
+        </article>
+
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@inject AuthenticationStateProvider provider;
+@inject NavigationManager navManager;
+
+@code {
+
+    private async void Logout(MouseEventArgs e)
+    {
+
+        var authStateProvider = (CustomAuthStateProvider)provider;
+
+        await authStateProvider.LogoutAsync();
+
+        navManager.NavigateTo("/");
+
+    }
+
+}

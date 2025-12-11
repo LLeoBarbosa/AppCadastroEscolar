@@ -1,0 +1,158 @@
+﻿@page "/account/register"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using ACE.Domain.Models
+@inject UserManager<Usuario> UserManager
+@inject NavigationManager NavManager
+
+<h3 class="text-center">Registro de Novo Usuário</h3>
+
+
+<div class="d-flex justify-content-center">
+
+    <div class="col-12 col-sm-8 col-md-6 col-lg-5">
+
+        <form onsubmit="return false;">
+
+            <div class="mb-3">
+                <label for="nome">Nome Completo</label>
+             
+                <input id="nome" @bind="registerModel.Nome" type="text" class="form-control" />
+            
+            </div>
+
+            <div class="mb-3">
+                <label for="email">E-mail</label>
+              
+                <input id="email" @bind="registerModel.Email" type="email" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="password">Senha</label>
+              
+                <input id="password" @bind="registerModel.Password" type="password" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="confirmPassword">Confirmar Senha</label>
+              
+                <input id="confirmPassword" @bind="registerModel.ConfirmPassword" type="password" class="form-control" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="alert alert-danger mt-3">@error</div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success mt-3">@successMessage</div>
+            }
+
+            <div class="mt-4 d-flex justify-content-between">
+
+               
+                <a href="/account/login" class="btn btn-link">
+                    Já tenho conta
+                </a>
+
+              
+                <button type="button" class="btn btn-success" disabled="@isBusy" @onclick="HandleRegister">
+
+                    @if (isBusy)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span>Criando...</span>
+                    }
+                    else
+                    {
+                        <span>Registrar</span>
+                    }
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+@code {
+
+    private RegisterModel registerModel = new();
+    private string error = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isBusy = false;
+
+    private async Task HandleRegister()
+    {
+        error = string.Empty;
+        successMessage = string.Empty;
+
+       
+        if (string.IsNullOrEmpty(registerModel.Email) || string.IsNullOrEmpty(registerModel.Password) || registerModel.Password != registerModel.ConfirmPassword)
+        {
+            error = "Por favor, preencha todos os campos e verifique se as senhas coincidem.";
+            return;
+        }
+
+        isBusy = true;
+
+        try
+        {
+            var user = new Usuario
+                {
+                    UserName = registerModel.Email,
+                    Email = registerModel.Email                  
+                };
+
+            var result = await UserManager.CreateAsync(user, registerModel.Password);
+
+            if (result.Succeeded)
+            {
+                successMessage = "Conta criada com sucesso! Redirecionando para o login...";
+
+                await Task.Delay(2000);
+                NavManager.NavigateTo("/account/login");
+            }
+            else
+            {
+                error = string.Join("; ", result.Errors.Select(e => e.Description));
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Ocorreu um erro inesperado: {ex.Message}";
+            Console.WriteLine(ex.ToString());
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    public class RegisterModel
+    {
+       
+        public string Nome { get; set; } = "";
+
+        [Required(ErrorMessage = "O E-mail é obrigatório.")]
+        [EmailAddress(ErrorMessage = "Formato de e-mail inválido.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "A Senha é obrigatória.")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "A senha deve ter pelo menos 6 caracteres.")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Required(ErrorMessage = "A Confirmação de Senha é obrigatória.")]
+        [DataType(DataType.Password)]
+        [Compare(nameof(Password), ErrorMessage = "A senha e a confirmação de senha não coincidem.")]
+        public string ConfirmPassword { get; set; } = "";
+    }
+
+}
