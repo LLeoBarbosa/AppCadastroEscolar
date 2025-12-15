@@ -46,8 +46,8 @@ namespace ACE.Infraestructure.Repositories
 
         public async Task<Aluno> BuscarPorCpfAsync(string cpf)
         {
-           
-            return await _context.Alunos.FindAsync(cpf);
+            //return await _context.Alunos.FindAsync(cpf);
+            return await _context.Alunos.SingleOrDefaultAsync(a => a.CPF == cpf);
         }
 
         //****************************************************************************

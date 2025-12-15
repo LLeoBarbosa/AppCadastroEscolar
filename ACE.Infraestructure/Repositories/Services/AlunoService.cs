@@ -100,20 +100,18 @@ namespace ACE.Infraestructure.Repositories.Services
         {
            
             var alunoExistente = await _alunoRepository.BuscarPorCpfAsync(cpf);
-
           
             if (alunoExistente != null)
-            {
-             
+            {             
                 if (id == null || alunoExistente.Id != id.Value)
                 {
                     throw new InvalidOperationException("CPF já cadastrado para outro aluno.");
                 }
             }
-            else
-            {
-                throw new ArgumentException("CPF Inexixtente");
-            }
+            //else
+            //{
+            //    throw new ArgumentException("CPF Inexistente");
+            //}
         }
 
         //********************************************************************************************

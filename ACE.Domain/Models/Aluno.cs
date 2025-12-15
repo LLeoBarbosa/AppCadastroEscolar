@@ -15,5 +15,7 @@ namespace ACE.Domain.Models
         public string UF { get; set; } = ""; // Estado (Ex: SP, RJ)
         public int? Numero { get; set; }
         public ICollection<Matricula> Matriculas { get; set; } = new List<Matricula>();
+
     }
+
 }

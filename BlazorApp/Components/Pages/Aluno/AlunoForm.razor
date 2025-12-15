@@ -13,6 +13,7 @@
 
 
 <div class="d-flex justify-content-center">
+
     <div class="col-12 col-md-10 col-lg-8">
 
         <EditForm Model="@alunoModel" OnValidSubmit="HandleCadastro">
@@ -20,7 +21,9 @@
             <ValidationSummary />
 
             <div class="card p-4 shadow-sm">
+    
                 <h5 class="card-title">Dados Pessoais</h5>
+                
                 <hr />
 
                 <div class="row">
@@ -120,12 +123,11 @@
 </div>
 
 @code {
+    
     private Aluno alunoModel = new();
     private string error = string.Empty;
     private string successMessage = string.Empty;
-    private bool isBusy = false;
-
-  
+    private bool isBusy = false;     
     
     private async Task HandleCadastro()
     {
@@ -146,8 +148,7 @@
                 Cidade = alunoModel.Cidade,
                 UF = alunoModel.UF,
                 Numero = alunoModel.Numero
-            };
-            
+            };            
          
             await AlunoService.AdicionarAlunoAsync(novoAluno);
 
